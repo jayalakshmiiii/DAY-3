@@ -20,5 +20,6 @@ def create_profile(sender, instance, created, **kwargs):
             Employer.objects.create(
                 user=instance,
                 company_name="Default Company",
-                company_location="Unknown"
-            )
+                domain="Not specified",
+                company_size=0
+    )

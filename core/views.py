@@ -1,25 +1,28 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Job, User
-from .serializers import JobSerializer, UserSerializer
+from .models import Job, User, Candidate, Employer
+from .serializers import (
+    JobSerializer,
+    UserSerializer,
+    CandidateProfileSerializer,
+    EmployerProfileSerializer
+)
+from .auth_serializers import SignupSerializer
 from .permissions import (
     IsAdmin,
     IsEmployer,
     IsCandidate
 )
-from rest_framework.views import APIView
-from rest_framework.response import Response
-
-
 class HomeAPI(APIView):
 
     def get(self, request):
         return Response({
             "message": "Welcome to Zecpath Backend"
         })
-
 class JobListAPI(APIView):
 
     def get(self, request):
@@ -75,13 +78,7 @@ class UserTestAPI(APIView):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-from .auth_serializers import SignupSerializer
-
-
+    
 class SignupAPI(APIView):
 
     def post(self, request):
@@ -104,10 +101,6 @@ class SignupAPI(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-from rest_framework_simplejwt.tokens import RefreshToken
-
-from .models import User
-
 
 class LoginAPI(APIView):
 
@@ -138,8 +131,6 @@ class LoginAPI(APIView):
                 },
                 status=400
             )
-from rest_framework.permissions import IsAuthenticated
-
 
 class ProtectedAPI(APIView):
 
@@ -149,4 +140,96 @@ class ProtectedAPI(APIView):
 
         return Response({
             "message": "JWT works"
+        })
+class CandidateProfileAPI(APIView):
+
+    permission_classes = [IsCandidate]
+
+    def get(self, request):
+        profile = Candidate.objects.get(
+            user__email=request.user.email,
+            is_deleted=False
+        )
+
+        serializer = CandidateProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request):
+        profile = Candidate.objects.get(
+            user__email=request.user.email,
+            is_deleted=False
+        )
+
+        serializer = CandidateProfileSerializer(
+            profile,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request):
+        profile = Candidate.objects.get(
+            user__email=request.user.email
+        )
+
+        profile.is_deleted = True
+        profile.save()
+
+        return Response({
+            "message": "Candidate profile deleted"
+        })
+
+
+class EmployerProfileAPI(APIView):
+
+    permission_classes = [IsEmployer]
+
+    def get(self, request):
+        profile = Employer.objects.get(
+            user__email=request.user.email,
+            is_deleted=False
+        )
+
+        serializer = EmployerProfileSerializer(profile)
+        return Response(serializer.data)
+
+    def put(self, request):
+        profile = Employer.objects.get(
+            user__email=request.user.email,
+            is_deleted=False
+        )
+
+        serializer = EmployerProfileSerializer(
+            profile,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def delete(self, request):
+        profile = Employer.objects.get(
+            user__email=request.user.email
+        )
+
+        profile.is_deleted = True
+        profile.save()
+
+        return Response({
+            "message": "Employer profile deleted"
         })

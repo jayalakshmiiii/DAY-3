@@ -1,3 +1,5 @@
+from urllib import request
+
 from rest_framework.permissions import BasePermission
 from .models import User
 
@@ -37,6 +39,8 @@ class IsCandidate(BasePermission):
         if not request.user.is_authenticated:
             return False
 
+        print("JWT USER:", request.user)
+        print("JWT EMAIL:", request.user.email)
         try:
             user = User.objects.get(email=request.user.email)
             return user.role == "candidate"

@@ -6,7 +6,9 @@ from .views import (
     JobListAPI,
     JobCreateAPI,
     UserTestAPI,
-    ProtectedAPI
+    ProtectedAPI,
+    CandidateProfileAPI,
+    EmployerProfileAPI,
 )
 
 urlpatterns = [
@@ -14,8 +16,8 @@ urlpatterns = [
     path('jobs/create/', JobCreateAPI.as_view()),
     path('users/', UserTestAPI.as_view()),
     path('protected/', ProtectedAPI.as_view()),
-    path('apply/',ApplyJobAPI.as_view()
-),
-
-path('admin-dashboard/',AdminDashboardAPI.as_view()),
+    path('apply/', ApplyJobAPI.as_view()),
+    path('admin-dashboard/', AdminDashboardAPI.as_view()),
+    path('profile/candidate/', CandidateProfileAPI.as_view()),
+    path('profile/employer/', EmployerProfileAPI.as_view()),
 ]
