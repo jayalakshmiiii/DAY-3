@@ -3,12 +3,14 @@ from django.urls import path
 from .views import (
     AdminDashboardAPI,
     ApplyJobAPI,
+    EmployerJobManageAPI,
     JobListAPI,
     JobCreateAPI,
     UserTestAPI,
     ProtectedAPI,
     CandidateProfileAPI,
     EmployerProfileAPI,
+
 )
 
 urlpatterns = [
@@ -20,4 +22,5 @@ urlpatterns = [
     path('admin-dashboard/', AdminDashboardAPI.as_view()),
     path('profile/candidate/', CandidateProfileAPI.as_view()),
     path('profile/employer/', EmployerProfileAPI.as_view()),
+    path('jobs/<int:job_id>/manage/',EmployerJobManageAPI.as_view()),
 ]

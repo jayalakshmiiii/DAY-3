@@ -3,9 +3,26 @@ from .models import Job, User, Candidate, Employer
 
 
 class JobSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Job
         fields = '__all__'
+        read_only_fields = ['employer']
+
+    def validate(self, data):
+        salary_min = data.get('salary_min')
+        salary_max = data.get('salary_max')
+
+        if (
+            salary_min is not None
+            and salary_max is not None
+            and salary_max < salary_min
+        ):
+            raise serializers.ValidationError(
+                "Maximum salary cannot be less than minimum salary."
+            )
+
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):

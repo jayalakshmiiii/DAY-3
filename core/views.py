@@ -65,18 +65,57 @@ class JobCreateAPI(APIView):
     permission_classes = [IsEmployer]
 
     def post(self, request):
+        employer = Employer.objects.get(
+            user=request.user,
+            is_deleted=False
+        )
 
         serializer = JobSerializer(
             data=request.data
         )
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(employer=employer)
 
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
             )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+class EmployerJobManageAPI(APIView):
+
+    permission_classes = [IsEmployer]
+
+    def put(self, request, job_id):
+        employer = Employer.objects.get(
+            user=request.user,
+            is_deleted=False
+        )
+
+        try:
+            job = Job.objects.get(
+                id=job_id,
+                employer=employer
+            )
+        except Job.DoesNotExist:
+            return Response(
+                {"error": "Job not found or access denied"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = JobSerializer(
+            job,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
 
         return Response(
             serializer.errors,

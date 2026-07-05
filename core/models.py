@@ -75,15 +75,48 @@ class Candidate(models.Model):
         return self.user.name
 
 class Job(models.Model):
+
+    JOB_TYPE_CHOICES = (
+        ('full_time', 'Full Time'),
+        ('part_time', 'Part Time'),
+        ('internship', 'Internship'),
+        ('contract', 'Contract'),
+    )
+
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    )
+
     employer = models.ForeignKey(
         Employer,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='jobs'
     )
 
     title = models.CharField(max_length=200)
     description = models.TextField()
+    skills = models.TextField()
+    experience = models.PositiveIntegerField(default=0)
+
+    salary_min = models.PositiveIntegerField()
+    salary_max = models.PositiveIntegerField()
+
     location = models.CharField(max_length=100)
-    salary = models.IntegerField()
+
+    job_type = models.CharField(
+        max_length=20,
+        choices=JOB_TYPE_CHOICES
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.title
