@@ -10,6 +10,7 @@ from .views import (
     ProtectedAPI,
     CandidateProfileAPI,
     EmployerProfileAPI,
+    CandidateApplicationListAPI,
 
 )
 
@@ -18,9 +19,10 @@ urlpatterns = [
     path('jobs/create/', JobCreateAPI.as_view()),
     path('users/', UserTestAPI.as_view()),
     path('protected/', ProtectedAPI.as_view()),
-    path('apply/', ApplyJobAPI.as_view()),
+    path('jobs/<int:job_id>/apply/', ApplyJobAPI.as_view()),
     path('admin-dashboard/', AdminDashboardAPI.as_view()),
     path('profile/candidate/', CandidateProfileAPI.as_view()),
     path('profile/employer/', EmployerProfileAPI.as_view()),
     path('jobs/<int:job_id>/manage/',EmployerJobManageAPI.as_view()),
+    path('applications/',CandidateApplicationListAPI.as_view()),
 ]

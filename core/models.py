@@ -127,18 +127,50 @@ class Job(models.Model):
 
 
 class Application(models.Model):
+
+    STATUS_CHOICES = (
+        ('applied', 'Applied'),
+        ('reviewing', 'Reviewing'),
+        ('shortlisted', 'Shortlisted'),
+        ('rejected', 'Rejected'),
+        ('hired', 'Hired'),
+    )
+
     candidate = models.ForeignKey(
         Candidate,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='applications'
     )
 
     job = models.ForeignKey(
         Job,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='applications'
     )
 
-    status = models.CharField(max_length=50)
+    resume_snapshot = models.FileField(
+        upload_to='application_resumes/',
+        null=True,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='applied'
+    )
+
     applied_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['candidate', 'job'],
+                name='unique_candidate_job_application'
+            )
+        ]
+        ordering = ['-applied_at']
 
     def __str__(self):
         return f"{self.candidate} - {self.job}"

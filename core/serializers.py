@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Job, User, Candidate, Employer
+from .models import Job, User, Candidate, Employer, Application
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -104,3 +104,30 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
                 "Company size cannot be negative."
             )
         return value
+class ApplicationSerializer(serializers.ModelSerializer):
+
+    job_title = serializers.CharField(
+        source='job.title',
+        read_only=True
+    )
+
+    class Meta:
+        model = Application
+        fields = [
+            'id',
+            'candidate',
+            'job',
+            'job_title',
+            'resume_snapshot',
+            'status',
+            'applied_at',
+            'updated_at'
+        ]
+
+        read_only_fields = [
+            'candidate',
+            'resume_snapshot',
+            'status',
+            'applied_at',
+            'updated_at'
+        ]

@@ -1,3 +1,5 @@
+from urllib import request
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,12 +9,13 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.hashers import check_password
 from django.db.models import Q
 
-from .models import Job, User, Candidate, Employer
+from .models import Job, User, Candidate, Employer, Application
 from .serializers import (
     JobSerializer,
     UserSerializer,
     CandidateProfileSerializer,
-    EmployerProfileSerializer
+    EmployerProfileSerializer,
+    ApplicationSerializer
 )
 from .auth_serializers import SignupSerializer
 from .permissions import (
@@ -157,14 +160,74 @@ class EmployerJobManageAPI(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 class ApplyJobAPI(APIView):
+    permission_classes = [IsCandidate]
+
+    def post(self, request, job_id):
+
+        candidate = Candidate.objects.get(
+            user=request.user,
+            is_deleted=False
+        )
+
+        try:
+            job = Job.objects.get(
+                id=job_id,
+                status='active'
+            )
+        except Job.DoesNotExist:
+            return Response(
+                {"error": "Active job not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if Application.objects.filter(
+            candidate=candidate,
+            job=job
+        ).exists():
+            return Response(
+                {"error": "You have already applied for this job"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        application = Application.objects.create(
+            candidate=candidate,
+            job=job,
+            resume_snapshot=candidate.resume
+        )
+
+        serializer = ApplicationSerializer(application)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED
+        )
+class CandidateApplicationListAPI(APIView):
 
     permission_classes = [IsCandidate]
 
-    def post(self, request):
+    def get(self, request):
 
-        return Response({
-            "message": "Job application submitted"
-        })
+        candidate = Candidate.objects.get(
+            user=request.user,
+            is_deleted=False
+        )
+
+        applications = Application.objects.filter(
+            candidate=candidate
+        ).select_related(
+            'job',
+            'job__employer'
+        )
+
+        serializer = ApplicationSerializer(
+            applications,
+            many=True
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 class AdminDashboardAPI(APIView):
 
     permission_classes = [IsAdmin]
