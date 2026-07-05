@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
+from django.contrib.auth.hashers import check_password
 
 from .models import Job, User, Candidate, Employer
 from .serializers import (
@@ -130,19 +131,21 @@ class SignupAPI(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
 class LoginAPI(APIView):
 
     def post(self, request):
-
         email = request.data.get("email")
         password = request.data.get("password")
 
         try:
+            user = User.objects.get(email=email)
 
-            user = User.objects.get(
-                email=email,
-                password=password
-            )
+            if not check_password(password, user.password):
+                return Response(
+                    {"error": "Invalid credentials"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
 
             refresh = RefreshToken.for_user(user)
 
@@ -152,12 +155,9 @@ class LoginAPI(APIView):
             })
 
         except User.DoesNotExist:
-
             return Response(
-                {
-                    "error": "Invalid credentials"
-                },
-                status=400
+                {"error": "Invalid credentials"},
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
 class ProtectedAPI(APIView):
