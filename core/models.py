@@ -82,18 +82,16 @@ class Job(models.Model):
         ('internship', 'Internship'),
         ('contract', 'Contract'),
     )
-
     STATUS_CHOICES = (
         ('active', 'Active'),
         ('inactive', 'Inactive'),
     )
-
+    is_featured = models.BooleanField(default=False)
     employer = models.ForeignKey(
         Employer,
         on_delete=models.CASCADE,
         related_name='jobs'
     )
-
     title = models.CharField(max_length=200)
     description = models.TextField()
     skills = models.TextField()
@@ -103,7 +101,6 @@ class Job(models.Model):
     salary_max = models.PositiveIntegerField()
 
     location = models.CharField(max_length=100)
-
     job_type = models.CharField(
         max_length=20,
         choices=JOB_TYPE_CHOICES
@@ -114,10 +111,17 @@ class Job(models.Model):
         choices=STATUS_CHOICES,
         default='active'
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    class Meta:
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['location']),
+            models.Index(fields=['job_type']),
+            models.Index(fields=['experience']),
+            models.Index(fields=['salary_min', 'salary_max']),
+            models.Index(fields=['-created_at']),
+        ]
     def __str__(self):
         return self.title
 

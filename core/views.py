@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.hashers import check_password
+from django.db.models import Q
 
 from .models import Job, User, Candidate, Employer
 from .serializers import (
@@ -31,16 +32,50 @@ class JobListAPI(APIView):
         jobs = Job.objects.select_related(
             'employer',
             'employer__user'
-        ).all()
+        ).filter(
+            status='active'
+        ).order_by('-created_at')
 
         search = request.query_params.get('search')
+        skill = request.query_params.get('skill')
         location = request.query_params.get('location')
+        job_type = request.query_params.get('job_type')
+        experience_min = request.query_params.get('experience_min')
+        experience_max = request.query_params.get('experience_max')
+        salary_min = request.query_params.get('salary_min')
+        salary_max = request.query_params.get('salary_max')
+        featured = request.query_params.get('featured')
 
         if search:
-            jobs = jobs.filter(title__icontains=search)
+            jobs = jobs.filter(
+                Q(title__icontains=search)
+                | Q(description__icontains=search)
+                | Q(skills__icontains=search)
+            )
+
+        if skill:
+            jobs = jobs.filter(skills__icontains=skill)
 
         if location:
             jobs = jobs.filter(location__icontains=location)
+
+        if job_type:
+            jobs = jobs.filter(job_type=job_type)
+
+        if experience_min:
+            jobs = jobs.filter(experience__gte=experience_min)
+
+        if experience_max:
+            jobs = jobs.filter(experience__lte=experience_max)
+
+        if salary_min:
+            jobs = jobs.filter(salary_max__gte=salary_min)
+
+        if salary_max:
+            jobs = jobs.filter(salary_min__lte=salary_max)
+
+        if featured == 'true':
+            jobs = jobs.filter(is_featured=True)
 
         paginator = PageNumberPagination()
         paginator.page_size = 5
