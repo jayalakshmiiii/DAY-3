@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
 
 from .models import Job, User, Candidate, Employer
 from .serializers import (
@@ -26,9 +27,36 @@ class HomeAPI(APIView):
 class JobListAPI(APIView):
 
     def get(self, request):
-        jobs = Job.objects.all()
-        serializer = JobSerializer(jobs, many=True)
-        return Response(serializer.data)
+        jobs = Job.objects.select_related(
+            'employer',
+            'employer__user'
+        ).all()
+
+        search = request.query_params.get('search')
+        location = request.query_params.get('location')
+
+        if search:
+            jobs = jobs.filter(title__icontains=search)
+
+        if location:
+            jobs = jobs.filter(location__icontains=location)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 5
+
+        paginated_jobs = paginator.paginate_queryset(
+            jobs,
+            request
+        )
+
+        serializer = JobSerializer(
+            paginated_jobs,
+            many=True
+        )
+
+        return paginator.get_paginated_response(
+            serializer.data
+        )
 
 
 class JobCreateAPI(APIView):
